@@ -84,6 +84,15 @@ break    return yy::tiger_parser::make_BREAK(loc);
 function return yy::tiger_parser::make_FUNCTION(loc);
 var      return yy::tiger_parser::make_VAR(loc);
 
+[0-9]+ {
+    errno = 0;
+    long val = strtol(yytext, NULL, 10);
+    if (errno || val > TIGER_INT_MAX)
+        utils::error(@$, "Integer literal out of range: %s", yytext);
+    yylval.integer = static_cast<int>(val);
+    return INT;
+}
+
  /* Identifiers */
 {id}       return yy::tiger_parser::make_ID(Symbol(yytext), loc);
 

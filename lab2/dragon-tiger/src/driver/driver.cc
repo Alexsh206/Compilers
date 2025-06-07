@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
   ("trace-parser", "enable parser traces")
   ("trace-lexer", "enable lexer traces")
   ("verbose,v", "be verbose")
-  ("input-file", po::value(&input_files), "input Tiger file");
+  ("input-file", po::value(&input_files), "input Tiger file")
+  ("eval,e", "evaluate the parsed AST");;
 
   po::positional_options_description positional;
   positional.add("input-file", 1);
@@ -47,6 +48,16 @@ int main(int argc, char **argv) {
     ast::ASTDumper dumper(&std::cout, vm.count("verbose") > 0);
     parser_driver.result_ast->accept(dumper);
     dumper.nl();
+  }
+
+  if (vm.count("eval") && vm.count("dump-ast")) {
+    utils::error("two ASTs can't be used simultaneously, specify either --eval (-e) or --dump-ast option");
+  }
+
+   if(vm.count("eval")) {
+    ast::ASTEvaluator evaluator;
+    int32_t result = parser_driver.result_ast->accept(evaluator);
+    std::cout << result << std::endl;
   }
   delete parser_driver.result_ast;
   return 0;

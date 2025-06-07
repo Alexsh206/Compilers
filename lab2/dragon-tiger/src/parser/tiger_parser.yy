@@ -81,6 +81,7 @@ using utils::nl;
 
 %token <Symbol> ID "id"
 %token <Symbol> STRING "string"
+%token INT
 
 // Declare the nonterminals types
 
@@ -105,6 +106,8 @@ using utils::nl;
 
 %nonassoc FUNCTION VAR TYPE DO OF ASSIGN;
 %left UMINUS;
+%left '+' '-'
+%left '*' '/'
 
 // Declare grammar rules and production actions
 
@@ -128,6 +131,7 @@ expr: stringExpr { $$ = $1; }
    | forExpr { $$ = $1; }
    | breakExpr { $$ = $1; }
    | letExpr { $$ = $1; }
+   | intExpr { $$ = $1; }
 ;
 
 varDecl: VAR ID typeannotation ASSIGN expr
@@ -173,6 +177,15 @@ opExpr: expr PLUS expr   { $$ = new BinaryOperator(@2, $1, $3, o_plus); }
         $$ = new IfThenElse(@2, $1,
                             new IfThenElse(@3, $3, new IntegerLiteral(nl, 1), new IntegerLiteral(nl, 0)),
                             new IntegerLiteral(nl, 0));
+      }
+      | expr OR expr {
+        $$ = new IfThenElse(@$, $1, new IntegerLiteral(@3, 1), $3);
+      }
+      | IF expr THEN expr {
+        $$ = new IfThenElse(@$, $2, $4, new Sequence(@$, {}));
+      }
+      | IF expr THEN expr ELSE expr {
+        $$ = new IfThenElse(@$, $2, $4, $6);
       }
 ;
 
@@ -247,6 +260,10 @@ param: ID COLON ID { $$ = new VarDecl(@1, $1, $3, nullptr); }
 
 typeannotation: { $$ = boost::none; }
   | COLON ID { $$ = $2; }
+;
+
+intExpr:
+    INT { $$ = new IntegerLiteral(@1, $1); }
 ;
 
 %%
